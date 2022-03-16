@@ -17,6 +17,14 @@ func mapSlice[T any, U any](sl []T, f func(T) U) []U {
 	return out
 }
 
+func rangeSlice(len int) []int {
+	s := make([]int, len)
+	for i := range s {
+		s[i] = i
+	}
+	return s
+}
+
 // func equal[T comparable](xs []T, ys []T) bool {
 // 	if len(xs) != len(ys) {
 // 		return false

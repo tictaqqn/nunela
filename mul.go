@@ -22,14 +22,26 @@ func TryTensorDotWithOneAxis[T Number](tensors []*nune.Tensor[T], axes []int) (*
 		}
 	}
 	sum := nune.Zeros[T](shape...)
+	r := rangeSlice(len(shape))
 	for i := 0; i < lenAxis; i++ {
-		tmp := nune.Ones[T](shape...)
+		prod := nune.Ones[T](shape...)
+		rankRange := 0
 		for j := range tensors {
+			viewRank := tensors[j].Rank() - 1
 			// TODO: remove .Ravel() after updating the behavior of nune.From
-			tmp.Mul(View(tensors[j], axes[j], i).Ravel())
+			prod.Mul(Repeat(View(tensors[j], axes[j], i), r[rankRange:rankRange+viewRank], shape).Ravel())
+			rankRange += viewRank
 		}
 		// TODO: remove .Ravel() after updating the behavior of nune.From
-		sum.Add(tmp.Ravel())
+		sum.Add(prod.Ravel())
 	}
 	return &sum, nil
+}
+
+func TensorDotWithOneAxis[T Number](tensors []*nune.Tensor[T], axes []int) *nune.Tensor[T] {
+	out, err := TryTensorDotWithOneAxis(tensors, axes)
+	if err != nil {
+		panic(err)
+	}
+	return out
 }
