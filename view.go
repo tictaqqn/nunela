@@ -31,6 +31,7 @@ func TryView[T Number](tensor *nune.Tensor[T], axis int, x int) (*nune.Tensor[T]
 	return &arr, nil
 }
 
+// TODO: Implement TensorView without copying and methods similar to Tensor
 func View[T Number](tensor *nune.Tensor[T], axis int, x int) *nune.Tensor[T] {
 	out, err := TryView(tensor, axis, x)
 	if err != nil {

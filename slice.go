@@ -1,8 +1,8 @@
 package nunela
 
-func every[T any](s []T, f func(int, T) bool) bool {
+func every[T any](s []T, f func(int, *T) bool) bool {
 	for i, v := range s {
-		if !f(i, v) {
+		if !f(i, &v) {
 			return false
 		}
 	}
