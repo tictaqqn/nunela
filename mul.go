@@ -2,7 +2,7 @@ package nunela
 
 import "github.com/vorduin/nune"
 
-func TryTensorDotWithOneAxis[T Number](tensors []nune.Tensor[T], axes []int) (*nune.Tensor[T], error) {
+func TryTensorDotWithOneAxis[T Number](tensors []*nune.Tensor[T], axes []int) (*nune.Tensor[T], error) {
 	if len(tensors) != len(axes) {
 		return nil, NewErrDifferentLen(tensors, axes)
 	}
@@ -26,7 +26,7 @@ func TryTensorDotWithOneAxis[T Number](tensors []nune.Tensor[T], axes []int) (*n
 		tmp := nune.ZerosLike[T](sum)
 		for j := range tensors {
 			// TODO: remove .Ravel() after updating the behavior of nune.From
-			tmp.Mul(View(&tensors[j], axes[j], i).Ravel())
+			tmp.Mul(View(tensors[j], axes[j], i).Ravel())
 		}
 		// TODO: remove .Ravel() after updating the behavior of nune.From
 		sum.Add(tmp.Ravel())
