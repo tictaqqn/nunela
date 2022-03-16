@@ -1,8 +1,8 @@
 package nunela
 
-import "log"
+import "github.com/vorduin/nune"
 
-func TryGetIndex[T Number](tensor Tensor[T], indices ...int) (int, error) {
+func TryGetIndex[T Number](tensor *nune.Tensor[T], indices ...int) (int, error) {
 	if tensor.Rank() != len(indices) {
 		return 0, NewErrDifferentRankAndIndices(tensor, indices)
 	}
@@ -16,15 +16,15 @@ func TryGetIndex[T Number](tensor Tensor[T], indices ...int) (int, error) {
 	return index, nil
 }
 
-func GetIndex[T Number](tensor Tensor[T], indices ...int) int {
+func GetIndex[T Number](tensor *nune.Tensor[T], indices ...int) int {
 	index, err := TryGetIndex(tensor, indices...)
 	if err != nil {
-		log.Fatalln(err)
+		panic(err)
 	}
 	return index
 }
 
-func TryAt[T Number](tensor Tensor[T], indices ...int) (T, error) {
+func TryAt[T Number](tensor *nune.Tensor[T], indices ...int) (T, error) {
 	index, err := TryGetIndex(tensor, indices...)
 	if err != nil {
 		return T(0), err
@@ -32,10 +32,10 @@ func TryAt[T Number](tensor Tensor[T], indices ...int) (T, error) {
 	return tensor.Ravel()[index], nil
 }
 
-func At[T Number](tensor Tensor[T], indices ...int) T {
+func At[T Number](tensor *nune.Tensor[T], indices ...int) T {
 	value, err := TryAt(tensor, indices...)
 	if err != nil {
-		log.Fatalln(err)
+		panic(err)
 	}
 	return value
 }

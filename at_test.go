@@ -26,7 +26,7 @@ func TestAt(t *testing.T) {
 	}
 	for name, tt := range cases {
 		t.Run(name, func(t *testing.T) {
-			val := nunela.At[int](tt.in, tt.at...)
+			val := nunela.At(&tt.in, tt.at...)
 			if val != tt.expected {
 				t.Error(name, val, tt.expected)
 			}

@@ -3,21 +3,31 @@ package nunela
 import (
 	"fmt"
 	"strings"
+
+	"github.com/vorduin/nune"
 )
 
-func mapShapes[T Number](tensors ...Tensor[T]) []string {
-	return mapSlice(tensors, func(tensor Tensor[T]) string { return fmt.Sprint(tensor.Shape()) })
+func mapShapes[T Number](tensors ...nune.Tensor[T]) []string {
+	return mapSlice(tensors, func(tensor *nune.Tensor[T]) string { return fmt.Sprint(tensor.Shape()) })
 }
 
-func NewErrDifferentRanks[T Number](tensors ...Tensor[T]) error {
+func NewErrNotEnoughTensorsGiven() error {
+	return fmt.Errorf("nunela: not enough number of tensors given")
+}
+
+func NewErrInappropriateAxisAndAxisNumber[T Number](tensor *nune.Tensor[T], axis int, x int) error {
+	return fmt.Errorf("nunela: inappropriate axis %v and axis number %v for tensor with shape (%v)", axis, x, tensor.Shape())
+}
+
+func NewErrDifferentRanks[T Number](tensors ...nune.Tensor[T]) error {
 	return fmt.Errorf("nunela: received tensors of different ranks, %s", strings.Join(mapShapes(tensors...), ", "))
 }
 
-func NewErrDifferentRankAndIndices[T Number](tensor Tensor[T], indices []int) error {
+func NewErrDifferentRankAndIndices[T Number](tensor *nune.Tensor[T], indices []int) error {
 	return fmt.Errorf("nunela: received indices that have length different from the rank of tensor, %d and %d", tensor.Rank(), len(indices))
 }
 
-func NewErrDifferentSizes[T Number](tensors ...Tensor[T]) error {
+func NewErrDifferentSizes[T Number](tensors ...nune.Tensor[T]) error {
 	return fmt.Errorf("nunela: received tensors of different sizes, %s", strings.Join(mapShapes(tensors...), ", "))
 }
 
@@ -30,5 +40,5 @@ func NewErrDifferentLen[T any, U any](xs []T, ys []U) error {
 }
 
 func NewErrDifferentIndices[T any](slices ...[]T) error {
-	return fmt.Errorf("nunela: received slices of different indices, %v", strings.Join(mapSlice(slices, func(t []T) string { return fmt.Sprint(t) }), ", "))
+	return fmt.Errorf("nunela: received slices of different indices, %v", strings.Join(mapSlice(slices, func(t *[]T) string { return fmt.Sprint(*t) }), ", "))
 }
