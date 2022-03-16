@@ -1,0 +1,83 @@
+package nunela
+
+import "github.com/vorduin/nune"
+
+// MatMul returns matrix product of two tensors.
+// For tensors with more than two dimensions,
+// calculate matrix product of last two dimensions.
+// func MatMul[T Number](x *nune.Tensor[T], y *nune.Tensor[T]) *Tensor[T] {
+// 	tensor, err := TryMatMul(x, y)
+// 	if err != nil {
+// 		panic(err)
+// 	}
+// 	return tensor
+// }
+
+// TryMatMul tries to return matrix product of two tensors.
+// For tensors with more than two dimensions,
+// calculate matrix product of last two dimensions.
+// func TryMatMul[T Number](x *nune.Tensor[T], y *nune.Tensor[T]) (*Tensor[T], error) {
+// 	return TryTensorDot([x, y], [[math.Max(0, x.Rank() - 2)], [math.Max(0, y.Rank() - 1)]])
+// }
+
+func TryTensorDotWithOneAxis[T Number](tensors []nune.Tensor[T], axes []int) (*nune.Tensor[T], error) {
+	if len(tensors) != len(axes) {
+		return nil, NewErrDifferentLen(tensors, axes)
+	}
+	if len(tensors) <= 1 {
+		return nil, NewErrNotEnoughTensorsGiven()
+	}
+	lenAxis := tensors[0].Size(axes[0])
+	for !every(tensors[1:], func(i int, t *nune.Tensor[T]) bool { return tensors[i].Size(axes[i]) == lenAxis }) {
+		return nil, NewErrDifferentSizes(tensors...)
+	}
+	var shape []int
+	for i := range tensors {
+		for j, size := range tensors[i].Shape() {
+			if j != axes[i] {
+				shape = append(shape, size)
+			}
+		}
+	}
+	sum := nune.Zeros[T](shape...)
+	for i := 0; i < lenAxis; i++ {
+		tmp := nune.ZerosLike[T](sum)
+		for j := range tensors {
+			// TODO: remove .Ravel() after updating the behavior of nune.From
+			tmp.Mul(View(&tensors[j], axes[j], i).Ravel())
+		}
+		// TODO: remove .Ravel() after updating the behavior of nune.From
+		sum.Add(tmp.Ravel())
+	}
+	return &sum, nil
+}
+
+// func TryTensorDot[T Number](tensors []Tensor[T], axes [][]int) (*Tensor[T], error) {
+// 	if len(tensors) != len(axes) {
+// 		return nil, NewErrDifferentLen(tensors, axes)
+// 	}
+// 	if !every(axes[1:], func(i int, axis []int) bool { return len(axis) == len(axes[0]) }) {
+// 		return nil, NewErrDifferentIndices(axes...)
+// 	}
+// 	if !every(axes, func(i int, t T) bool {
+// 		return every(axes[0], func(i int, t []int) bool { return tensors[i].Size(axes[i]) })
+// 	}) {
+// 		return nil, NewErrDifferentIndices(axes...)
+// 	}
+
+// 	for i := range axes[0] {
+// 		// add axes[:][i] tensors values
+// 		prod := T(1)
+// 		for j := range tensors {
+// 			tensors[j].Size(axes[j][i])
+// 		}
+// 	}
+// }
+
+// func ProdAxis[T Number](tensor *nune.Tensor[T], axis int) T {
+// 	prod := T(1)
+// 	for i := 0; i < tensor.Numel()/tensor.Size(axis); i++ {
+// 		prod *= tensor.Ravel()[]
+// 	}
+// 	return prod
+// }
