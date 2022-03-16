@@ -27,6 +27,14 @@ func NewErrDifferentRankAndIndices[T Number](tensor *nune.Tensor[T], indices []i
 	return fmt.Errorf("nunela: received indices that have length different from the rank of tensor, %d and %d", tensor.Rank(), len(indices))
 }
 
+func NewErrInvalidAxisAndShape(baseAxis int, toShape []int) error {
+	return fmt.Errorf("nunela: received invalid baseAxis %d for toShape %v", baseAxis, toShape)
+}
+
+func NewErrInvalidSizesWithBaseIndex(baseShape []int, toShape []int, baseAxis int) error {
+	return fmt.Errorf("nunela: baseShape (%v) and toShape (%v) with baseAxis %d are incompatible", baseShape, toShape, baseAxis)
+}
+
 func NewErrDifferentSizes[T Number](tensors ...*nune.Tensor[T]) error {
 	return fmt.Errorf("nunela: received tensors of different sizes, %s", strings.Join(mapShapes(tensors...), ", "))
 }

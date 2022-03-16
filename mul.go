@@ -23,7 +23,7 @@ func TryTensorDotWithOneAxis[T Number](tensors []*nune.Tensor[T], axes []int) (*
 	}
 	sum := nune.Zeros[T](shape...)
 	for i := 0; i < lenAxis; i++ {
-		tmp := nune.ZerosLike[T](sum)
+		tmp := nune.Ones[T](shape...)
 		for j := range tensors {
 			// TODO: remove .Ravel() after updating the behavior of nune.From
 			tmp.Mul(View(tensors[j], axes[j], i).Ravel())
