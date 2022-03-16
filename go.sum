@@ -1,0 +1,6 @@
+github.com/vorduin/nune v0.2.0 h1:bpx9x8y18XlUZLNxsGLqPes78FFK2jo3XXxH3oycXYA=
+github.com/vorduin/nune v0.2.0/go.mod h1:nY1rzMpsWkFgIAmA1Hvtu5AGKz82ahGuFENO6y/PR88=
+github.com/vorduin/slices v1.1.2 h1:+KVwwzJUVp16lytGhUZHm6m00GfJFwk37HQ8SUBphMc=
+github.com/vorduin/slices v1.1.2/go.mod h1:eW5urYsjPejRUuHX3oqO/NopJZ0jeeCYoFVoDq2OgGI=
+golang.org/x/exp v0.0.0-20220218215828-6cf2b201936e h1:iWVPgObh6F4UDtjBLK51zsy5UHTPLQwCmsNjCsbKhQ0=
+golang.org/x/exp v0.0.0-20220218215828-6cf2b201936e/go.mod h1:lgLbSvA5ygNOMpwM/9anMpWVlVJ7Z+cHWq/eFuinpGE=
