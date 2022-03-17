@@ -91,10 +91,10 @@ func TryViewAssign[T Number](assigned, assigning *nune.Tensor[T], axisPairs map[
 	}
 	for i := range assigned.Ravel() {
 		shouldAdd := true
-		indices := make([]int, 0, len(axisPairs)-1)
-		for axis := 0; axis < assigning.Rank(); axis++ {
-			x, ok := axisPairs[axis]
+		indices := make([]int, 0, assigning.Rank())
+		for axis := 0; axis < assigned.Rank(); axis++ {
 			index := (i % prods[axis]) / prods[axis+1]
+			x, ok := axisPairs[axis]
 			if !ok {
 				indices = append(indices, index)
 				continue
