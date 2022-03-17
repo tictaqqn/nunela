@@ -65,3 +65,41 @@ func View[T Number](tensor *nune.Tensor[T], axisPairs map[int][2]int, dropAxis m
 	}
 	return out
 }
+
+func TryViewAssign[T Number](assigned, assigning *nune.Tensor[T], axisPairs map[int][2]int, dropAxis map[int]struct{}) error {
+	for axis, x := range axisPairs {
+		size := assigned.Size(axis)
+		if axis >= assigned.Rank() || x[0] >= size || x[1] >= size+1 {
+			return NewErrInappropriateAxisAndAxisNumber(assigned, axis, x)
+		}
+	}
+
+	prods := make([]int, assigned.Rank()+1)
+	prods[assigned.Rank()] = 1
+	for i := assigned.Rank() - 1; i >= 0; i-- {
+		prods[i] = prods[i+1] * assigned.Shape()[i]
+	}
+	for i := range assigned.Ravel() {
+		shouldAdd := true
+		indices := make([]int, 0, len(axisPairs))
+		for axis, x := range axisPairs {
+			index := (i % prods[axis]) / prods[axis+1]
+			if index < x[0] || x[1] <= index {
+				shouldAdd = false
+				break
+			}
+			indices = append(indices, index)
+		}
+		if shouldAdd {
+			assigned.Ravel()[i] = At(assigning, indices...)
+		}
+	}
+	return nil
+}
+
+func ViewAssign[T Number](assigned, assigning *nune.Tensor[T], axisPairs map[int][2]int, dropAxis map[int]struct{}) {
+	err := TryViewAssign(assigned, assigning, axisPairs, dropAxis)
+	if err != nil {
+		panic(err)
+	}
+}
