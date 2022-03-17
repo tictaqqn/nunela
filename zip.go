@@ -59,8 +59,8 @@ func Rem[T Integer](a, b *nune.Tensor[T]) *nune.Tensor[T] {
 	return Zip(a, b, func(x, y T) T { return x % y })
 }
 
-func AddAssign[T Number](a, b *nune.Tensor[T]) *nune.Tensor[T] {
-	return Zip(a, b, func(x, y T) T { return x + y })
+func AddAssign[T Number](a, b *nune.Tensor[T]) {
+	ZipAssign(a, b, func(x, y T) T { return x + y })
 }
 
 func SubAssign[T Number](a, b *nune.Tensor[T]) {
