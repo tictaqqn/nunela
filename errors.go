@@ -15,8 +15,8 @@ func NewErrNotEnoughTensorsGiven() error {
 	return fmt.Errorf("nunela: not enough number of tensors given")
 }
 
-func NewErrInappropriateAxisAndAxisNumber[T Number](tensor *nune.Tensor[T], axis int, x int) error {
-	return fmt.Errorf("nunela: inappropriate axis %v and axis number %v for tensor with shape (%v)", axis, x, tensor.Shape())
+func NewErrInappropriateAxisAndAxisNumber[T Number](tensor *nune.Tensor[T], axis int, x [2]int) error {
+	return fmt.Errorf("nunela: inappropriate axis %v and axis numbers %v for tensor with shape (%v)", axis, x, tensor.Shape())
 }
 
 func NewErrDifferentRanks[T Number](tensors ...*nune.Tensor[T]) error {

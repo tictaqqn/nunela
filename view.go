@@ -5,9 +5,12 @@ import (
 	"github.com/vorduin/slices"
 )
 
-func TryView[T Number](tensor *nune.Tensor[T], axisPairs map[int]int) (*nune.Tensor[T], error) {
+// rangePairs indicates whether the index is in range [min, max).
+// if rangePairs do not have the item of the given axis, then allows all range.
+func TryView[T Number](tensor *nune.Tensor[T], axisPairs map[int][2]int, dropAxis map[int]struct{}) (*nune.Tensor[T], error) {
 	for axis, x := range axisPairs {
-		if axis >= tensor.Rank() || x >= tensor.Size(axis) {
+		size := tensor.Size(axis)
+		if axis >= tensor.Rank() || x[0] >= size || x[1] >= size+1 {
 			return nil, NewErrInappropriateAxisAndAxisNumber(tensor, axis, x)
 		}
 	}
@@ -23,7 +26,8 @@ func TryView[T Number](tensor *nune.Tensor[T], axisPairs map[int]int) (*nune.Ten
 	for i, val := range tensor.Ravel() {
 		shouldAdd := true
 		for axis, x := range axisPairs {
-			if (i%prods[axis])/prods[axis+1] != x {
+			index := (i % prods[axis]) / prods[axis+1]
+			if index < x[0] || x[1] <= index {
 				shouldAdd = false
 				break
 			}
@@ -34,8 +38,19 @@ func TryView[T Number](tensor *nune.Tensor[T], axisPairs map[int]int) (*nune.Ten
 	}
 	shape := make([]int, 0, tensor.Rank()-1)
 	for i, size := range tensor.Shape() {
-		if !slices.Contains(axes, i) {
+		pair, ok := axisPairs[i]
+		if !ok {
 			shape = append(shape, size)
+		} else {
+			len := pair[1] - pair[0]
+			adding := true
+			if len == 1 && dropAxis != nil {
+				_, ok := dropAxis[i]
+				adding = !ok
+			}
+			if adding {
+				shape = append(shape, len)
+			}
 		}
 	}
 	arr := FromBufferWithShape(data, shape)
@@ -43,8 +58,8 @@ func TryView[T Number](tensor *nune.Tensor[T], axisPairs map[int]int) (*nune.Ten
 }
 
 // TODO: Implement TensorView without copying and methods similar to Tensor
-func View[T Number](tensor *nune.Tensor[T], axisPairs map[int]int) *nune.Tensor[T] {
-	out, err := TryView(tensor, axisPairs)
+func View[T Number](tensor *nune.Tensor[T], axisPairs map[int][2]int, dropAxis map[int]struct{}) *nune.Tensor[T] {
+	out, err := TryView(tensor, axisPairs, dropAxis)
 	if err != nil {
 		panic(err)
 	}
