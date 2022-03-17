@@ -33,7 +33,7 @@ func TryTensorDotWithOneAxis[T Number](tensors []*nune.Tensor[T], axes []int) (*
 		}
 		for j := range tensors {
 			viewRank := tensors[j].Rank() - 1
-			MulAssign(&prod, Repeat(View(tensors[j], [][2]int{{axes[j], i}}), r[rankRange:rankRange+viewRank], shape))
+			MulAssign(&prod, Repeat(View(tensors[j], map[int]int{axes[j]: i}), r[rankRange:rankRange+viewRank], shape))
 			rankRange += viewRank
 		}
 		AddAssign(&sum, &prod)

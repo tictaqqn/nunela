@@ -5,15 +5,14 @@ import (
 	"github.com/vorduin/slices"
 )
 
-func TryView[T Number](tensor *nune.Tensor[T], axisPairs [][2]int) (*nune.Tensor[T], error) {
-	for _, pair := range axisPairs {
-		axis, x := pair[0], pair[1]
+func TryView[T Number](tensor *nune.Tensor[T], axisPairs map[int]int) (*nune.Tensor[T], error) {
+	for axis, x := range axisPairs {
 		if axis >= tensor.Rank() || x >= tensor.Size(axis) {
 			return nil, NewErrInappropriateAxisAndAxisNumber(tensor, axis, x)
 		}
 	}
 
-	axes := mapSlice(axisPairs, func(pair [2]int) int { return pair[0] })
+	axes := keys(axisPairs)
 	data := make([]T, 0, tensor.Numel()/slices.Prod(mapSlice(axes, func(axis int) int { return tensor.Size(axis) })))
 
 	prods := make([]int, tensor.Rank()+1)
@@ -23,8 +22,7 @@ func TryView[T Number](tensor *nune.Tensor[T], axisPairs [][2]int) (*nune.Tensor
 	}
 	for i, val := range tensor.Ravel() {
 		shouldAdd := true
-		for _, pair := range axisPairs {
-			axis, x := pair[0], pair[1]
+		for axis, x := range axisPairs {
 			if (i%prods[axis])/prods[axis+1] != x {
 				shouldAdd = false
 				break
@@ -45,7 +43,7 @@ func TryView[T Number](tensor *nune.Tensor[T], axisPairs [][2]int) (*nune.Tensor
 }
 
 // TODO: Implement TensorView without copying and methods similar to Tensor
-func View[T Number](tensor *nune.Tensor[T], axisPairs [][2]int) *nune.Tensor[T] {
+func View[T Number](tensor *nune.Tensor[T], axisPairs map[int]int) *nune.Tensor[T] {
 	out, err := TryView(tensor, axisPairs)
 	if err != nil {
 		panic(err)
