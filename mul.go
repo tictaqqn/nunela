@@ -85,12 +85,11 @@ func TryStrassenDotAx[T Number](a *nune.Tensor[T], b *nune.Tensor[T], aAxis int,
 	as[1] = View(a, makeAxisPairs(a.Shape(), map[int][2]int{aOtherAx: {0, aOtherAxSize / 2}, aAxis: {size / 2, size}}), nil)
 	as[2] = View(a, makeAxisPairs(a.Shape(), map[int][2]int{aOtherAx: {aOtherAxSize / 2, aOtherAxSize}, aAxis: {0, size / 2}}), nil)
 	as[3] = View(a, makeAxisPairs(a.Shape(), map[int][2]int{aOtherAx: {aOtherAxSize / 2, aOtherAxSize}, aAxis: {size / 2, size}}), nil)
-
 	bs := make([]*nune.Tensor[T], 4)
 
 	bs[0] = View(b, makeAxisPairs(b.Shape(), map[int][2]int{bOtherAx: {0, bOtherAxSize / 2}, bAxis: {0, size / 2}}), nil)
-	bs[1] = View(b, makeAxisPairs(b.Shape(), map[int][2]int{bOtherAx: {0, bOtherAxSize / 2}, bAxis: {size / 2, size}}), nil)
-	bs[2] = View(b, makeAxisPairs(b.Shape(), map[int][2]int{bOtherAx: {bOtherAxSize / 2, bOtherAxSize}, bAxis: {0, size / 2}}), nil)
+	bs[1] = View(b, makeAxisPairs(b.Shape(), map[int][2]int{bOtherAx: {bOtherAxSize / 2, bOtherAxSize}, bAxis: {0, size / 2}}), nil)
+	bs[2] = View(b, makeAxisPairs(b.Shape(), map[int][2]int{bOtherAx: {0, bOtherAxSize / 2}, bAxis: {size / 2, size}}), nil)
 	bs[3] = View(b, makeAxisPairs(b.Shape(), map[int][2]int{bOtherAx: {bOtherAxSize / 2, bOtherAxSize}, bAxis: {size / 2, size}}), nil)
 
 	ts := make([]*nune.Tensor[T], 7)
