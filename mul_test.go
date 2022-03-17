@@ -8,6 +8,7 @@ import (
 )
 
 func TestTensorDotWithOneAxis(t *testing.T) {
+	nune.EnvConfig.Interactive = true
 	cases := map[string]struct {
 		tensor0  nune.Tensor[int]
 		tensor1  nune.Tensor[int]
@@ -18,7 +19,8 @@ func TestTensorDotWithOneAxis(t *testing.T) {
 			nune.Range[int](0, 8, 1).Reshape(2, 4),
 			nune.Range[int](0, 12, 1).Reshape(4, 3),
 			[]int{1, 0},
-			nune.FromBuffer([]int{42, 48, 54,
+			nune.FromBuffer([]int{
+				42, 48, 54,
 				114, 136, 158,
 			}).Reshape(2, 3),
 		},

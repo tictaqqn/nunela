@@ -35,8 +35,11 @@ func NewErrInvalidSizesWithBaseIndex(baseShape []int, toShape []int, baseAxis in
 	return fmt.Errorf("nunela: baseShape (%v) and toShape (%v) with baseAxis %d are incompatible", baseShape, toShape, baseAxis)
 }
 
-func NewErrDifferentSizes[T Number](tensors ...*nune.Tensor[T]) error {
+func NewErrDifferentShapes[T Number](tensors ...*nune.Tensor[T]) error {
 	return fmt.Errorf("nunela: received tensors of different sizes, %s", strings.Join(mapShapes(tensors...), ", "))
+}
+func NewErrDifferentShapesTwo(tensors ...TensorLike) error {
+	return fmt.Errorf("nunela: received tensors of different sizes, %s", strings.Join(mapSlice(tensors, func(t TensorLike) string { return fmt.Sprint(t.Shape()) }), ", "))
 }
 
 func NewErrInappropriateEinString(equation string) error {

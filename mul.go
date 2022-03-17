@@ -1,6 +1,8 @@
 package nunela
 
-import "github.com/vorduin/nune"
+import (
+	"github.com/vorduin/nune"
+)
 
 func TryTensorDotWithOneAxis[T Number](tensors []*nune.Tensor[T], axes []int) (*nune.Tensor[T], error) {
 	if len(tensors) != len(axes) {
@@ -11,7 +13,7 @@ func TryTensorDotWithOneAxis[T Number](tensors []*nune.Tensor[T], axes []int) (*
 	}
 	lenAxis := tensors[0].Size(axes[0])
 	for !every(tensors[1:], func(i int, t *nune.Tensor[T]) bool { return tensors[i].Size(axes[i]) == lenAxis }) {
-		return nil, NewErrDifferentSizes(tensors...)
+		return nil, NewErrDifferentShapes(tensors...)
 	}
 	var shape []int
 	for i := range tensors {
@@ -28,12 +30,10 @@ func TryTensorDotWithOneAxis[T Number](tensors []*nune.Tensor[T], axes []int) (*
 		rankRange := 0
 		for j := range tensors {
 			viewRank := tensors[j].Rank() - 1
-			// TODO: remove .Ravel() after updating the behavior of nune.From
-			prod.Mul(Repeat(View(tensors[j], axes[j], i), r[rankRange:rankRange+viewRank], shape).Ravel())
+			MulAssign(&prod, Repeat(View(tensors[j], axes[j], i), r[rankRange:rankRange+viewRank], shape))
 			rankRange += viewRank
 		}
-		// TODO: remove .Ravel() after updating the behavior of nune.From
-		sum.Add(prod.Ravel())
+		AddAssign(&sum, &prod)
 	}
 	return &sum, nil
 }
