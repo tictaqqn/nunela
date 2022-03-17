@@ -33,7 +33,7 @@ func TryTensorDotWithOneAxis[T Number](tensors []*nune.Tensor[T], axes []int) (*
 		}
 		for j := range tensors {
 			viewRank := tensors[j].Rank() - 1
-			MulAssign(&prod, Repeat(View(tensors[j], axes[j], i), r[rankRange:rankRange+viewRank], shape))
+			MulAssign(&prod, Repeat(View(tensors[j], [][2]int{{axes[j], i}}), r[rankRange:rankRange+viewRank], shape))
 			rankRange += viewRank
 		}
 		AddAssign(&sum, &prod)
@@ -48,3 +48,15 @@ func TensorDotWithOneAxis[T Number](tensors []*nune.Tensor[T], axes []int) *nune
 	}
 	return out
 }
+
+// // strassenMul computes matrix multiplation by Strassen method
+// func strassenMul[T Number](a *nune.Tensor[T], b *nune.Tensor[T], axes []int) *nune.Tensor[T] {
+// 	ts := make([]*nune.Tensor[T], 7)
+// 	ss := make([]*nune.Tensor[T], 7)
+// 	qs := make([]*nune.Tensor[T], 7)
+
+// }
+
+// func QuadView[T Number](tensor *nune.Tensor[T]) *nune.Tensor[T] {
+
+// }
