@@ -123,26 +123,38 @@ func TryStrassenDotAx[T Number](a *nune.Tensor[T], b *nune.Tensor[T], aAxis int,
 
 	wg.Add(7)
 	for i := 0; i < 7; i++ {
-		go func(t, s *nune.Tensor[T]) {
-			*t = *TensorDotWithOneAxis([]*nune.Tensor[T]{t, s}, []int{aAxis, bAxis})
+		go func(t **nune.Tensor[T], s *nune.Tensor[T]) {
+			*t = TensorDotWithOneAxis([]*nune.Tensor[T]{*t, s}, []int{aAxis, bAxis})
 			wg.Done()
-		}(ts[i], ss[i])
+		}(&ts[i], ss[i])
 	}
 	wg.Wait()
 
+	var q01, q24 *nune.Tensor[T]
 	wg.Add(2)
-	go func(q3, q4, a1 *nune.Tensor[T]) {
-		*a1 = *Add(q3, q4)
+	go func(q2, q3, q4 *nune.Tensor[T], a1, q24 **nune.Tensor[T]) {
+		*a1 = Add(q3, q4)
+		*q24 = Sub(q4, q2)
 		wg.Done()
-	}(ts[3], ts[4], as[1])
-	go func(q5, q6, a2 *nune.Tensor[T]) {
-		*a2 = *Add(q5, q6)
+	}(ts[2], ts[3], ts[4], &as[1], &q24)
+	go func(q0, q1, q5, q6 *nune.Tensor[T], a2, q01 **nune.Tensor[T]) {
+		*a2 = Add(q5, q6)
+		*q01 = Add(q0, q1)
 		wg.Done()
-	}(ts[5], ts[6], as[2])
+	}(ts[0], ts[1], ts[5], ts[6], &as[2], &q01)
 	wg.Wait()
 
-	as[0] = Add(Sub(Add(ts[0], ts[1]), ts[3]), ts[5])
-	as[3] = Sub(Add(Sub(ts[1], ts[2]), ts[4]), ts[6])
+	wg.Add(2)
+	go func(q01, q3, q5 *nune.Tensor[T], a0 **nune.Tensor[T]) {
+		*a0 = Add(Sub(q01, q3), q5)
+		wg.Done()
+	}(q01, ts[3], ts[5], &as[0])
+	go func(q24, q1, q6 *nune.Tensor[T], a3 **nune.Tensor[T]) {
+		*a3 = Sub(Add(q24, q1), q6)
+		wg.Done()
+	}(q24, ts[1], ts[6], &as[3])
+	wg.Wait()
+
 	shape := slices.Clone(as[0].Shape())
 	newAxis := 0
 	newAOtherAx, newBOtherAx := 0, 0
