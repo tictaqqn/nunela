@@ -103,3 +103,15 @@ func TestStrassenDotAx(t *testing.T) {
 		})
 	}
 }
+
+func BenchmarkTensorDot(b *testing.B) {
+	benchmarkOp(b, func(tensor nune.Tensor[TestsT]) {
+		nunela.TensorDotWithOneAxis([]*nune.Tensor[TestsT]{&tensor, &tensor}, []int{1, 0})
+	})
+}
+
+func BenchmarkStrassen(b *testing.B) {
+	benchmarkOp(b, func(tensor nune.Tensor[TestsT]) {
+		nunela.StrassenDotAx(&tensor, &tensor, 1, 0)
+	})
+}
