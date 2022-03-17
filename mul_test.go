@@ -24,6 +24,24 @@ func TestTensorDotWithOneAxis(t *testing.T) {
 				114, 136, 158,
 			}).Reshape(2, 3),
 		},
+		"3D tensordot with different axes": {
+			nune.Range[int](0, 8, 1).Reshape(2, 4),
+			nune.Range[int](0, 12, 1).Reshape(2, 2, 3),
+			[]int{0, 1},
+			nune.FromBuffer([]int{
+				12, 16, 20,
+				36, 40, 44,
+
+				15, 21, 27,
+				51, 57, 63,
+
+				18, 26, 34,
+				66, 74, 82,
+
+				21, 31, 41,
+				81, 91, 101,
+			}).Reshape(4, 2, 3),
+		},
 	}
 
 	for name, tt := range cases {
