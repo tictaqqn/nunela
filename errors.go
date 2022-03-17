@@ -7,7 +7,7 @@ import (
 	"github.com/vorduin/nune"
 )
 
-func mapShapes[T Number](tensors ...nune.Tensor[T]) []string {
+func mapShapes[T Number](tensors ...*nune.Tensor[T]) []string {
 	return mapSlice(tensors, func(tensor *nune.Tensor[T]) string { return fmt.Sprint(tensor.Shape()) })
 }
 
@@ -19,7 +19,7 @@ func NewErrInappropriateAxisAndAxisNumber[T Number](tensor *nune.Tensor[T], axis
 	return fmt.Errorf("nunela: inappropriate axis %v and axis number %v for tensor with shape (%v)", axis, x, tensor.Shape())
 }
 
-func NewErrDifferentRanks[T Number](tensors ...nune.Tensor[T]) error {
+func NewErrDifferentRanks[T Number](tensors ...*nune.Tensor[T]) error {
 	return fmt.Errorf("nunela: received tensors of different ranks, %s", strings.Join(mapShapes(tensors...), ", "))
 }
 
@@ -27,8 +27,19 @@ func NewErrDifferentRankAndIndices[T Number](tensor *nune.Tensor[T], indices []i
 	return fmt.Errorf("nunela: received indices that have length different from the rank of tensor, %d and %d", tensor.Rank(), len(indices))
 }
 
-func NewErrDifferentSizes[T Number](tensors ...nune.Tensor[T]) error {
+func NewErrInvalidAxisAndShape(baseAxis int, toShape []int) error {
+	return fmt.Errorf("nunela: received invalid baseAxis %d for toShape %v", baseAxis, toShape)
+}
+
+func NewErrInvalidSizesWithBaseIndex(baseShape []int, toShape []int, baseAxis int) error {
+	return fmt.Errorf("nunela: baseShape (%v) and toShape (%v) with baseAxis %d are incompatible", baseShape, toShape, baseAxis)
+}
+
+func NewErrDifferentShapes[T Number](tensors ...*nune.Tensor[T]) error {
 	return fmt.Errorf("nunela: received tensors of different sizes, %s", strings.Join(mapShapes(tensors...), ", "))
+}
+func NewErrDifferentShapesTwo(tensors ...TensorLike) error {
+	return fmt.Errorf("nunela: received tensors of different sizes, %s", strings.Join(mapSlice(tensors, func(t TensorLike) string { return fmt.Sprint(t.Shape()) }), ", "))
 }
 
 func NewErrInappropriateEinString(equation string) error {
@@ -40,5 +51,5 @@ func NewErrDifferentLen[T any, U any](xs []T, ys []U) error {
 }
 
 func NewErrDifferentIndices[T any](slices ...[]T) error {
-	return fmt.Errorf("nunela: received slices of different indices, %v", strings.Join(mapSlice(slices, func(t *[]T) string { return fmt.Sprint(*t) }), ", "))
+	return fmt.Errorf("nunela: received slices of different indices, %v", strings.Join(mapSlice(slices, func(t []T) string { return fmt.Sprint(t) }), ", "))
 }

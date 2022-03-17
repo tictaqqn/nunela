@@ -9,12 +9,20 @@ func every[T any](s []T, f func(int, T) bool) bool {
 	return true
 }
 
-func mapSlice[T any, U any](sl []T, f func(*T) U) []U {
+func mapSlice[T any, U any](sl []T, f func(T) U) []U {
 	out := make([]U, 0, len(sl))
 	for _, v := range sl {
-		out = append(out, f(&v))
+		out = append(out, f(v))
 	}
 	return out
+}
+
+func rangeSlice(len int) []int {
+	s := make([]int, len)
+	for i := range s {
+		s[i] = i
+	}
+	return s
 }
 
 // func equal[T comparable](xs []T, ys []T) bool {
