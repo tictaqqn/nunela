@@ -24,10 +24,13 @@ func TryTensorDotWithOneAxis[T Number](tensors []*nune.Tensor[T], axes []int) (*
 		}
 	}
 	sum := nune.Zeros[T](shape...)
+	prod := nune.Ones[T](shape...)
 	r := rangeSlice(len(shape))
 	for i := 0; i < lenAxis; i++ {
-		prod := nune.Ones[T](shape...)
 		rankRange := 0
+		for j := range prod.Ravel() {
+			prod.Ravel()[j] = T(1)
+		}
 		for j := range tensors {
 			viewRank := tensors[j].Rank() - 1
 			MulAssign(&prod, Repeat(View(tensors[j], axes[j], i), r[rankRange:rankRange+viewRank], shape))
