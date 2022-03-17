@@ -7,10 +7,10 @@ func TryGetIndex[T Number](tensor *nune.Tensor[T], indices ...int) (int, error) 
 		return 0, NewErrDifferentRankAndIndices(tensor, indices)
 	}
 	index := 0
-	shapes := tensor.Shape()
-	for i := range shapes[1:] {
+	shape := tensor.Shape()
+	for i := range shape[1:] {
 		index += indices[i]
-		index *= shapes[i+1]
+		index *= shape[i+1]
 	}
 	index += indices[len(indices)-1]
 	return index, nil

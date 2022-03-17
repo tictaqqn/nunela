@@ -24,7 +24,11 @@ func NewErrDifferentRanks[T Number](tensors ...*nune.Tensor[T]) error {
 }
 
 func NewErrDifferentRankAndIndices[T Number](tensor *nune.Tensor[T], indices []int) error {
-	return fmt.Errorf("nunela: received indices that have length different from the rank of tensor, %d and %d", tensor.Rank(), len(indices))
+	return fmt.Errorf("nunela: received indices that have length %d, different from the rank of tensor, %d", len(indices), tensor.Rank())
+}
+
+func NewErrDifferentRankAndAxisPairLen[T Number](tensor *nune.Tensor[T], axisPair map[int][2]int) error {
+	return fmt.Errorf("nunela: received axis pairs that have length %d, different from the rank of tensor, %d", len(axisPair), tensor.Rank())
 }
 
 func NewErrInvalidAxisAndShape(baseAxis int, toShape []int) error {

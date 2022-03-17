@@ -4,8 +4,10 @@ import (
 	"sync"
 
 	"github.com/vorduin/nune"
+	"github.com/vorduin/slices"
 )
 
+// TryTensorDotWithOneAxis computes tensor multiplation on the given axes.
 func TryTensorDotWithOneAxis[T Number](tensors []*nune.Tensor[T], axes []int) (*nune.Tensor[T], error) {
 	if len(tensors) != len(axes) {
 		return nil, NewErrDifferentLen(tensors, axes)
@@ -43,6 +45,7 @@ func TryTensorDotWithOneAxis[T Number](tensors []*nune.Tensor[T], axes []int) (*
 	return &sum, nil
 }
 
+// TensorDotWithOneAxis computes tensor multiplation on the given axes.
 func TensorDotWithOneAxis[T Number](tensors []*nune.Tensor[T], axes []int) *nune.Tensor[T] {
 	out, err := TryTensorDotWithOneAxis(tensors, axes)
 	if err != nil {
@@ -51,44 +54,44 @@ func TensorDotWithOneAxis[T Number](tensors []*nune.Tensor[T], axes []int) *nune
 	return out
 }
 
-// TryStrassenDotAx computes matrix multiplation using Strassen algorithm with given axes.
+// TryStrassenDotAx computes matrix multiplation using Strassen algorithm on given axes.
+// Only accepts tensors of even sizes on each axis.
 func TryStrassenDotAx[T Number](a *nune.Tensor[T], b *nune.Tensor[T], aAxis int, bAxis int) (*nune.Tensor[T], error) {
 	if a.Rank() <= 1 || b.Rank() <= 1 {
 		return TryTensorDotWithOneAxis([]*nune.Tensor[T]{a, b}, []int{aAxis, bAxis})
 	}
-	aSize := a.Size(aAxis)
-	bSize := b.Size(bAxis)
-	if aSize != bSize {
+	size := a.Size(aAxis)
+	if size != b.Size(bAxis) {
 		return nil, NewErrDifferentShapes(a, b)
 	}
 	aOtherAx := aAxis - 1
-	if aAxis == -1 {
+	if aOtherAx == -1 {
 		aOtherAx = 1
 	}
 	bOtherAx := bAxis - 1
-	if bAxis == -1 {
+	if bOtherAx == -1 {
 		bOtherAx = 1
 	}
 	aOtherAxSize := a.Size(aOtherAx)
 	bOtherAxSize := b.Size(bOtherAx)
 
-	if aSize <= 1 || bSize <= 1 || aOtherAxSize <= 1 || bOtherAxSize <= 1 {
+	if size <= 1 || aOtherAxSize <= 1 || bOtherAxSize <= 1 {
 		return TryTensorDotWithOneAxis([]*nune.Tensor[T]{a, b}, []int{aAxis, bAxis})
 	}
 
 	as := make([]*nune.Tensor[T], 4)
 
-	as[0] = View(a, map[int][2]int{aOtherAx: {0, aOtherAxSize / 2}, aAxis: {0, aSize / 2}}, nil)
-	as[1] = View(a, map[int][2]int{aOtherAx: {0, aOtherAxSize / 2}, aAxis: {aSize / 2, aSize}}, nil)
-	as[2] = View(a, map[int][2]int{aOtherAx: {aOtherAxSize / 2, aOtherAxSize}, aAxis: {0, aSize / 2}}, nil)
-	as[3] = View(a, map[int][2]int{aOtherAx: {aOtherAxSize / 2, aOtherAxSize}, aAxis: {aSize / 2, aSize}}, nil)
+	as[0] = View(a, makeAxisPairs(a.Shape(), map[int][2]int{aOtherAx: {0, aOtherAxSize / 2}, aAxis: {0, size / 2}}), nil)
+	as[1] = View(a, makeAxisPairs(a.Shape(), map[int][2]int{aOtherAx: {0, aOtherAxSize / 2}, aAxis: {size / 2, size}}), nil)
+	as[2] = View(a, makeAxisPairs(a.Shape(), map[int][2]int{aOtherAx: {aOtherAxSize / 2, aOtherAxSize}, aAxis: {0, size / 2}}), nil)
+	as[3] = View(a, makeAxisPairs(a.Shape(), map[int][2]int{aOtherAx: {aOtherAxSize / 2, aOtherAxSize}, aAxis: {size / 2, size}}), nil)
 
 	bs := make([]*nune.Tensor[T], 4)
 
-	bs[0] = View(a, map[int][2]int{bOtherAx: {0, bOtherAxSize / 2}, bAxis: {0, bSize / 2}}, nil)
-	bs[1] = View(a, map[int][2]int{bOtherAx: {0, bOtherAxSize / 2}, bAxis: {bSize / 2, bSize}}, nil)
-	bs[2] = View(a, map[int][2]int{bOtherAx: {bOtherAxSize / 2, bOtherAxSize}, bAxis: {0, bSize / 2}}, nil)
-	bs[3] = View(a, map[int][2]int{bOtherAx: {bOtherAxSize / 2, bOtherAxSize}, bAxis: {bSize / 2, bSize}}, nil)
+	bs[0] = View(b, makeAxisPairs(b.Shape(), map[int][2]int{bOtherAx: {0, bOtherAxSize / 2}, bAxis: {0, size / 2}}), nil)
+	bs[1] = View(b, makeAxisPairs(b.Shape(), map[int][2]int{bOtherAx: {0, bOtherAxSize / 2}, bAxis: {size / 2, size}}), nil)
+	bs[2] = View(b, makeAxisPairs(b.Shape(), map[int][2]int{bOtherAx: {bOtherAxSize / 2, bOtherAxSize}, bAxis: {0, size / 2}}), nil)
+	bs[3] = View(b, makeAxisPairs(b.Shape(), map[int][2]int{bOtherAx: {bOtherAxSize / 2, bOtherAxSize}, bAxis: {size / 2, size}}), nil)
 
 	ts := make([]*nune.Tensor[T], 7)
 	ss := make([]*nune.Tensor[T], 7)
@@ -99,7 +102,7 @@ func TryStrassenDotAx[T Number](a *nune.Tensor[T], b *nune.Tensor[T], aAxis int,
 	go func(as []*nune.Tensor[T], ts []*nune.Tensor[T]) {
 		ts[0] = Sub(as[1], as[3])
 		ts[1] = Add(as[0], as[3])
-		ts[2] = Add(as[0], as[2])
+		ts[2] = Sub(as[0], as[2])
 		ts[3] = Add(as[0], as[1])
 		ts[4] = as[0]
 		ts[5] = as[3]
@@ -130,32 +133,60 @@ func TryStrassenDotAx[T Number](a *nune.Tensor[T], b *nune.Tensor[T], aAxis int,
 
 	wg.Add(2)
 	go func(q3, q4, a1 *nune.Tensor[T]) {
-		a1 = Add(q3, q4)
+		*a1 = *Add(q3, q4)
 		wg.Done()
 	}(ts[3], ts[4], as[1])
 	go func(q5, q6, a2 *nune.Tensor[T]) {
-		a2 = Add(q5, q6)
+		*a2 = *Add(q5, q6)
 		wg.Done()
 	}(ts[5], ts[6], as[2])
 	wg.Wait()
 
-	as[0] = Add(Sub(Add(ts[0], ts[1]), ts[3]), ts[6])
+	as[0] = Add(Sub(Add(ts[0], ts[1]), ts[3]), ts[5])
 	as[3] = Sub(Add(Sub(ts[1], ts[2]), ts[4]), ts[6])
-	shape := make([]int, as[0].Rank())
-	shape[aOtherAx] = aOtherAxSize
-	shape[bOtherAx] = bOtherAxSize
+	shape := slices.Clone(as[0].Shape())
+	newAxis := 0
+	newAOtherAx, newBOtherAx := 0, 0
+	for axis := 0; axis < a.Rank()+b.Rank(); axis++ {
+		if axis == aAxis || axis == a.Rank()+bAxis {
+			continue
+		}
+		if axis == aOtherAx {
+			newAOtherAx = newAxis
+		}
+		if axis == a.Rank()+bOtherAx {
+			newBOtherAx = newAxis
+		}
+		newAxis++
+	}
+	shape[newAOtherAx] = aOtherAxSize
+	shape[newBOtherAx] = bOtherAxSize
 	out := nune.Zeros[T](shape...)
-	ViewAssign(&out, as[0], map[int][2]int{aOtherAx: {0, aOtherAxSize / 2}, bOtherAx: {0, bOtherAxSize / 2}}, nil)
-	ViewAssign(&out, as[1], map[int][2]int{aOtherAx: {0, aOtherAxSize / 2}, bOtherAx: {bOtherAxSize / 2, bOtherAxSize}}, nil)
-	ViewAssign(&out, as[2], map[int][2]int{aOtherAx: {aOtherAxSize / 2, aOtherAxSize}, bOtherAx: {0, bOtherAxSize / 2}}, nil)
-	ViewAssign(&out, as[3], map[int][2]int{aOtherAx: {aOtherAxSize / 2, aOtherAxSize}, bOtherAx: {bOtherAxSize / 2, bOtherAxSize}}, nil)
+
+	ViewAssign(&out, as[0], map[int][2]int{newAOtherAx: {0, aOtherAxSize / 2}, newBOtherAx: {0, bOtherAxSize / 2}}, nil)
+	ViewAssign(&out, as[1], map[int][2]int{newAOtherAx: {0, aOtherAxSize / 2}, newBOtherAx: {bOtherAxSize / 2, bOtherAxSize}}, nil)
+	ViewAssign(&out, as[2], map[int][2]int{newAOtherAx: {aOtherAxSize / 2, aOtherAxSize}, newBOtherAx: {0, bOtherAxSize / 2}}, nil)
+	ViewAssign(&out, as[3], map[int][2]int{newAOtherAx: {aOtherAxSize / 2, aOtherAxSize}, newBOtherAx: {bOtherAxSize / 2, bOtherAxSize}}, nil)
 	return &out, nil
 }
 
+// StrassenDotAx computes matrix multiplation using Strassen algorithm won given axes.
+// Only accepts tensors of even sizes on each axis.
 func StrassenDotAx[T Number](a *nune.Tensor[T], b *nune.Tensor[T], aAxis int, bAxis int) *nune.Tensor[T] {
 	out, err := TryStrassenDotAx(a, b, aAxis, bAxis)
 	if err != nil {
 		panic(err)
 	}
 	return out
+}
+
+func makeAxisPairs(shape []int, addAxisPairs map[int][2]int) map[int][2]int {
+	axisPairs := make(map[int][2]int)
+	for axis, x := range shape {
+		axisPairs[axis] = [2]int{0, x}
+	}
+	for axis, pair := range addAxisPairs {
+		axisPairs[axis] = pair
+	}
+	return axisPairs
 }

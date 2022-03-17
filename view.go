@@ -5,8 +5,10 @@ import (
 	"github.com/vorduin/slices"
 )
 
-// rangePairs indicates whether the index is in range [min, max).
-// if rangePairs do not have the item of the given axis, then allows all range.
+// TryView extracts a sub-tensor from a tensor with given axisPairs.
+// axisPairs indicates whether the index is in range [min, max).
+// if axisPairs do not have the item of the given axis, then allows all range.
+// Drop axis if dropAxis has an element axis and the difference between min and max is 1.
 func TryView[T Number](tensor *nune.Tensor[T], axisPairs map[int][2]int, dropAxis map[int]struct{}) (*nune.Tensor[T], error) {
 	for axis, x := range axisPairs {
 		size := tensor.Size(axis)
@@ -42,14 +44,14 @@ func TryView[T Number](tensor *nune.Tensor[T], axisPairs map[int][2]int, dropAxi
 		if !ok {
 			shape = append(shape, size)
 		} else {
-			len := pair[1] - pair[0]
+			length := pair[1] - pair[0]
 			adding := true
-			if len == 1 && dropAxis != nil {
+			if length == 1 && dropAxis != nil {
 				_, ok := dropAxis[i]
 				adding = !ok
 			}
 			if adding {
-				shape = append(shape, len)
+				shape = append(shape, length)
 			}
 		}
 	}
@@ -57,6 +59,10 @@ func TryView[T Number](tensor *nune.Tensor[T], axisPairs map[int][2]int, dropAxi
 	return &arr, nil
 }
 
+// View extracts a sub-tensor from a tensor with given axisPairs.
+// axisPairs indicates whether the index is in range [min, max).
+// if axisPairs do not have the item of the given axis, then allows all range.
+// Drop axis if dropAxis has an element axis and the difference between min and max is 1.
 // TODO: Implement TensorView without copying and methods similar to Tensor
 func View[T Number](tensor *nune.Tensor[T], axisPairs map[int][2]int, dropAxis map[int]struct{}) *nune.Tensor[T] {
 	out, err := TryView(tensor, axisPairs, dropAxis)
@@ -66,6 +72,10 @@ func View[T Number](tensor *nune.Tensor[T], axisPairs map[int][2]int, dropAxis m
 	return out
 }
 
+// TryViewAssign extracts a sub-tensor from a tensor with given axisPairs and assigning tensor is assigned to the sub-tensor.
+// axisPairs indicates whether the index is in range [min, max).
+// if axisPairs do not have the item of the given axis, then allows all range.
+// Drop axis if dropAxis has an element axis and the difference between min and max is 1.
 func TryViewAssign[T Number](assigned, assigning *nune.Tensor[T], axisPairs map[int][2]int, dropAxis map[int]struct{}) error {
 	for axis, x := range axisPairs {
 		size := assigned.Size(axis)
@@ -81,14 +91,21 @@ func TryViewAssign[T Number](assigned, assigning *nune.Tensor[T], axisPairs map[
 	}
 	for i := range assigned.Ravel() {
 		shouldAdd := true
-		indices := make([]int, 0, len(axisPairs))
-		for axis, x := range axisPairs {
+		indices := make([]int, 0, len(axisPairs)-1)
+		for axis := 0; axis < assigning.Rank(); axis++ {
+			x, ok := axisPairs[axis]
 			index := (i % prods[axis]) / prods[axis+1]
+			if !ok {
+				indices = append(indices, index)
+				continue
+			}
 			if index < x[0] || x[1] <= index {
 				shouldAdd = false
 				break
 			}
-			indices = append(indices, index)
+			if _, ok := dropAxis[axis]; !ok || x[1] != x[0]+1 {
+				indices = append(indices, index-x[0])
+			}
 		}
 		if shouldAdd {
 			assigned.Ravel()[i] = At(assigning, indices...)
@@ -97,6 +114,10 @@ func TryViewAssign[T Number](assigned, assigning *nune.Tensor[T], axisPairs map[
 	return nil
 }
 
+// ViewAssign extracts a sub-tensor from a tensor with given axisPairs and assigning tensor is assigned to the sub-tensor.
+// axisPairs indicates whether the index is in range [min, max).
+// if axisPairs do not have the item of the given axis, then allows all range.
+// Drop axis if dropAxis has an element axis and the difference between min and max is 1.
 func ViewAssign[T Number](assigned, assigning *nune.Tensor[T], axisPairs map[int][2]int, dropAxis map[int]struct{}) {
 	err := TryViewAssign(assigned, assigning, axisPairs, dropAxis)
 	if err != nil {
