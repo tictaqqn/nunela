@@ -55,7 +55,6 @@ func TensorDot[T Number](tensors []*nune.Tensor[T], axes []int) *nune.Tensor[T] 
 }
 
 // TryStrassenDot computes matrix multiplation using Strassen algorithm on given axes.
-// Only accepts tensors of even sizes on each axis.
 func TryStrassenDot[T Number](a *nune.Tensor[T], b *nune.Tensor[T], aAxis int, bAxis int) (*nune.Tensor[T], error) {
 	if a.Rank() <= 1 || b.Rank() <= 1 {
 		return TryTensorDot([]*nune.Tensor[T]{a, b}, []int{aAxis, bAxis})
@@ -255,7 +254,6 @@ func tryStrassenDot[T Number](a *nune.Tensor[T], b *nune.Tensor[T], aAxis int, b
 }
 
 // StrassenDot computes matrix multiplation using Strassen algorithm won given axes.
-// Only accepts tensors of even sizes on each axis.
 func StrassenDot[T Number](a *nune.Tensor[T], b *nune.Tensor[T], aAxis int, bAxis int) *nune.Tensor[T] {
 	out, err := TryStrassenDot(a, b, aAxis, bAxis)
 	if err != nil {
