@@ -115,3 +115,32 @@ func BenchmarkStrassen(b *testing.B) {
 		nunela.StrassenDotAx(&tensor, &tensor, 1, 0)
 	})
 }
+
+func FuzzTensorDot(f *testing.F) {
+	f.Add(2, 1, 3, 1, 4, 1, 5, 1)
+	f.Fuzz(func(t *testing.T, x0, x1, x2, x3, y0, y1, y2, y3 int) {
+		tensor0 := nune.FromBuffer([]int{x0, x1, x2, x3}).Reshape(2, 2)
+		tensor1 := nune.FromBuffer([]int{y0, y1, y2, y3}).Reshape(2, 2)
+		tensorDot := nunela.TensorDotWithOneAxis([]*nune.Tensor[int]{&tensor0, &tensor1}, []int{1, 0})
+		strassenDot := nunela.StrassenDotAx(&tensor0, &tensor1, 1, 0)
+		if !nunela.Equal(tensorDot, strassenDot) {
+			f.Failed()
+		}
+	})
+}
+
+func FuzzTensorDotWithDifferentShapes(f *testing.F) {
+	f.Add(2, 1, 3, 1, 4, 1, 5, 1, 3)
+	f.Fuzz(func(t *testing.T, start0, step0, shape0X, shape01Y, shape0Z, start1, step1, shape1X, shape1Z int) {
+		if shape0X <= 0 || shape01Y <= 0 || shape0Z <= 0 || shape1X <= 0 || shape1Z <= 0 {
+			return
+		}
+		tensor0 := nune.Range[int](start0, start0+shape0X*shape01Y*shape0Z*step0, step0).Reshape(shape0X, shape01Y, shape0Z)
+		tensor1 := nune.Range[int](start1, start1+shape1X*shape01Y*shape1Z*step1, step1).Reshape(shape1X, shape01Y, shape1Z)
+		tensorDot := nunela.TensorDotWithOneAxis([]*nune.Tensor[int]{&tensor0, &tensor1}, []int{1, 1})
+		strassenDot := nunela.StrassenDotAx(&tensor0, &tensor1, 1, 1)
+		if !nunela.Equal(tensorDot, strassenDot) {
+			f.Failed()
+		}
+	})
+}

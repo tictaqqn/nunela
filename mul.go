@@ -16,7 +16,7 @@ func TryTensorDotWithOneAxis[T Number](tensors []*nune.Tensor[T], axes []int) (*
 		return nil, NewErrNotEnoughTensorsGiven()
 	}
 	lenAxis := tensors[0].Size(axes[0])
-	for !every(tensors[1:], func(i int, t *nune.Tensor[T]) bool { return tensors[i].Size(axes[i]) == lenAxis }) {
+	for !every(tensors[1:], func(i int, t *nune.Tensor[T]) bool { return t.Size(axes[i+1]) == lenAxis }) {
 		return nil, NewErrDifferentShapes(tensors...)
 	}
 	var shape []int
