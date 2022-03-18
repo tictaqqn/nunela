@@ -25,6 +25,14 @@ func rangeSlice(len int) []int {
 	return s
 }
 
+func keys[K comparable, V any](m map[K]V) []K {
+	s := make([]K, 0, len(m))
+	for key := range m {
+		s = append(s, key)
+	}
+	return s
+}
+
 // func equal[T comparable](xs []T, ys []T) bool {
 // 	if len(xs) != len(ys) {
 // 		return false
