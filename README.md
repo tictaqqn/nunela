@@ -1,7 +1,6 @@
 # Nunela
 
 [![Go Reference](https://pkg.go.dev/badge/github.com/bababax11/nunela.svg)](https://pkg.go.dev/github.com/bababax11/nunela)
-
 ![Minimum Go version](https://img.shields.io/badge/Go-1.18+-lightblue.svg?style=flat-square)
 
 ## Overview
