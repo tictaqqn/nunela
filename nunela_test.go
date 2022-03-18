@@ -60,7 +60,7 @@ func benchmarkOp(b *testing.B, f func(nune.Tensor[TestsT])) {
 		})
 	})
 
-	b.Run("1.6e5Float64Procs1", func(b *testing.B) {
+	b.Run("4e4Float64Procs1", func(b *testing.B) {
 		nune.EnvConfig.NumCPU = 1
 		tensor := newTensor(2e2)
 
@@ -69,7 +69,7 @@ func benchmarkOp(b *testing.B, f func(nune.Tensor[TestsT])) {
 		})
 	})
 
-	b.Run("1.6e5Float64ProcsN", func(b *testing.B) {
+	b.Run("4e4Float64ProcsN", func(b *testing.B) {
 		nune.EnvConfig.NumCPU = 0
 		tensor := newTensor(2e2)
 
