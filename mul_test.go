@@ -91,6 +91,33 @@ func TestStrassenDotAx(t *testing.T) {
 				108, 118, 128, 138,
 			}).Reshape(4, 2, 4),
 		},
+		"matrix multiplation with odd sizes": {
+			nune.Range[int](0, 8, 1).Reshape(2, 4),
+			nune.Range[int](0, 12, 1).Reshape(4, 3),
+			[]int{1, 0},
+			nune.FromBuffer([]int{
+				42, 48, 54,
+				114, 136, 158,
+			}).Reshape(2, 3),
+		},
+		"3D tensordot with different axes with odd sizes": {
+			nune.Range[int](0, 8, 1).Reshape(2, 4),
+			nune.Range[int](0, 12, 1).Reshape(2, 2, 3),
+			[]int{0, 1},
+			nune.FromBuffer([]int{
+				12, 16, 20,
+				36, 40, 44,
+
+				15, 21, 27,
+				51, 57, 63,
+
+				18, 26, 34,
+				66, 74, 82,
+
+				21, 31, 41,
+				81, 91, 101,
+			}).Reshape(4, 2, 3),
+		},
 	}
 
 	for name, tt := range cases {
@@ -132,7 +159,7 @@ func FuzzTensorDot(f *testing.F) {
 func FuzzTensorDotWithDifferentShapes(f *testing.F) {
 	f.Add(2, 1, 3, 1, 4, 1, 5, 1, 3)
 	f.Fuzz(func(t *testing.T, start0, step0, shape0X, shape01Y, shape0Z, start1, step1, shape1X, shape1Z int) {
-		if shape0X <= 0 || shape01Y <= 0 || shape0Z <= 0 || shape1X <= 0 || shape1Z <= 0 {
+		if shape0X <= 0 || shape01Y <= 0 || shape0Z <= 0 || shape1X <= 0 || shape1Z <= 0 || step0 <= 0 || step1 <= 0 {
 			return
 		}
 		tensor0 := nune.Range[int](start0, start0+shape0X*shape01Y*shape0Z*step0, step0).Reshape(shape0X, shape01Y, shape0Z)

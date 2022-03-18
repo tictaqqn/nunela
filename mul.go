@@ -64,6 +64,79 @@ func TryStrassenDotAx[T Number](a *nune.Tensor[T], b *nune.Tensor[T], aAxis int,
 	if size != b.Size(bAxis) {
 		return nil, NewErrDifferentShapes(a, b)
 	}
+	aNewShape := make([]int, a.Rank())
+	aNewFlag := false
+	for i, size := range a.Shape() {
+		if size%2 != 0 {
+			aNewFlag = true
+			aNewShape[i] = size + 1
+		} else {
+			aNewShape[i] = size
+		}
+	}
+	var aNew *nune.Tensor[T]
+	if aNewFlag {
+		aNewTmp := nune.Zeros[T](aNewShape...)
+		aNew = &aNewTmp
+		ViewAssign(aNew, a, makeAxisPairs(a.Shape(), nil), nil)
+	} else {
+		aNew = a
+	}
+
+	bNewShape := make([]int, b.Rank())
+	bNewFlag := false
+	for i, size := range b.Shape() {
+		if size%2 != 0 {
+			bNewFlag = true
+			bNewShape[i] = size + 1
+		} else {
+			bNewShape[i] = size
+		}
+	}
+	var bNew *nune.Tensor[T]
+	if bNewFlag {
+		bNewTmp := nune.Zeros[T](bNewShape...)
+		bNew = &bNewTmp
+		ViewAssign(bNew, b, makeAxisPairs(b.Shape(), nil), nil)
+	} else {
+		bNew = b
+	}
+	mul, err := tryStrassenDotAx(aNew, bNew, aAxis, bAxis)
+	if err != nil {
+		return nil, err
+	}
+
+	var mulOut *nune.Tensor[T]
+	if aNewFlag || bNewFlag {
+		var shape []int
+		newAxis := 0
+		for i, size := range a.Shape() {
+			if i == aAxis {
+				continue
+			}
+			shape = append(shape, size)
+			newAxis++
+		}
+		for i, size := range b.Shape() {
+			if i == bAxis {
+				continue
+			}
+			shape = append(shape, size)
+			newAxis++
+		}
+		mulOutTmp := nune.Zeros[T](shape...)
+		mulOut = &mulOutTmp
+		ViewAssign(mulOut, mul, nil, nil)
+	} else {
+		mulOut = mul
+	}
+	return mulOut, nil
+}
+
+func tryStrassenDotAx[T Number](a *nune.Tensor[T], b *nune.Tensor[T], aAxis int, bAxis int) (*nune.Tensor[T], error) {
+
+	size := a.Size(aAxis)
+
 	aOtherAx := aAxis - 1
 	if aOtherAx == -1 {
 		aOtherAx = 1
@@ -195,6 +268,9 @@ func makeAxisPairs(shape []int, addAxisPairs map[int][2]int) map[int][2]int {
 	axisPairs := make(map[int][2]int)
 	for axis, x := range shape {
 		axisPairs[axis] = [2]int{0, x}
+	}
+	if addAxisPairs == nil {
+		return axisPairs
 	}
 	for axis, pair := range addAxisPairs {
 		axisPairs[axis] = pair

@@ -77,6 +77,9 @@ func View[T Number](tensor *nune.Tensor[T], axisPairs map[int][2]int, dropAxis m
 // if axisPairs do not have the item of the given axis, then allows all range.
 // Drop axis if dropAxis has an element axis and the difference between min and max is 1.
 func TryViewAssign[T Number](assigned, assigning *nune.Tensor[T], axisPairs map[int][2]int, dropAxis map[int]struct{}) error {
+	if axisPairs == nil {
+		axisPairs = make(map[int][2]int)
+	}
 	for axis, x := range axisPairs {
 		size := assigned.Size(axis)
 		if axis >= assigned.Rank() || x[0] >= size || x[1] >= size+1 {
