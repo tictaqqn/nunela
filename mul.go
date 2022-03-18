@@ -218,11 +218,13 @@ func tryStrassenDot[T Number](a *nune.Tensor[T], b *nune.Tensor[T], aAxis int, b
 
 	wg.Add(2)
 	go func(q01, q3, q5 *nune.Tensor[T], a0 **nune.Tensor[T]) {
-		*a0 = Add(Sub(q01, q3), q5)
+		*a0 = Sub(q01, q3)
+		AddAssign(*a0, q5)
 		wg.Done()
 	}(q01, ts[3], ts[5], &as[0])
 	go func(q24, q1, q6 *nune.Tensor[T], a3 **nune.Tensor[T]) {
-		*a3 = Sub(Add(q24, q1), q6)
+		*a3 = Add(q24, q1)
+		SubAssign(*a3, q6)
 		wg.Done()
 	}(q24, ts[1], ts[6], &as[3])
 	wg.Wait()
