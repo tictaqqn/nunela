@@ -7,8 +7,8 @@ import (
 	"github.com/vorduin/slices"
 )
 
-// TryTensorDotWithOneAxis computes tensor multiplation on the given axes.
-func TryTensorDotWithOneAxis[T Number](tensors []*nune.Tensor[T], axes []int) (*nune.Tensor[T], error) {
+// TryTensorDot computes tensor multiplation on the given axes.
+func TryTensorDot[T Number](tensors []*nune.Tensor[T], axes []int) (*nune.Tensor[T], error) {
 	if len(tensors) != len(axes) {
 		return nil, NewErrDifferentLen(tensors, axes)
 	}
@@ -45,20 +45,20 @@ func TryTensorDotWithOneAxis[T Number](tensors []*nune.Tensor[T], axes []int) (*
 	return &sum, nil
 }
 
-// TensorDotWithOneAxis computes tensor multiplation on the given axes.
-func TensorDotWithOneAxis[T Number](tensors []*nune.Tensor[T], axes []int) *nune.Tensor[T] {
-	out, err := TryTensorDotWithOneAxis(tensors, axes)
+// TensorDot computes tensor multiplation on the given axes.
+func TensorDot[T Number](tensors []*nune.Tensor[T], axes []int) *nune.Tensor[T] {
+	out, err := TryTensorDot(tensors, axes)
 	if err != nil {
 		panic(err)
 	}
 	return out
 }
 
-// TryStrassenDotAx computes matrix multiplation using Strassen algorithm on given axes.
+// TryStrassenDot computes matrix multiplation using Strassen algorithm on given axes.
 // Only accepts tensors of even sizes on each axis.
-func TryStrassenDotAx[T Number](a *nune.Tensor[T], b *nune.Tensor[T], aAxis int, bAxis int) (*nune.Tensor[T], error) {
+func TryStrassenDot[T Number](a *nune.Tensor[T], b *nune.Tensor[T], aAxis int, bAxis int) (*nune.Tensor[T], error) {
 	if a.Rank() <= 1 || b.Rank() <= 1 {
-		return TryTensorDotWithOneAxis([]*nune.Tensor[T]{a, b}, []int{aAxis, bAxis})
+		return TryTensorDot([]*nune.Tensor[T]{a, b}, []int{aAxis, bAxis})
 	}
 	size := a.Size(aAxis)
 	if size != b.Size(bAxis) {
@@ -101,7 +101,7 @@ func TryStrassenDotAx[T Number](a *nune.Tensor[T], b *nune.Tensor[T], aAxis int,
 	} else {
 		bNew = b
 	}
-	mul, err := tryStrassenDotAx(aNew, bNew, aAxis, bAxis)
+	mul, err := tryStrassenDot(aNew, bNew, aAxis, bAxis)
 	if err != nil {
 		return nil, err
 	}
@@ -133,7 +133,7 @@ func TryStrassenDotAx[T Number](a *nune.Tensor[T], b *nune.Tensor[T], aAxis int,
 	return mulOut, nil
 }
 
-func tryStrassenDotAx[T Number](a *nune.Tensor[T], b *nune.Tensor[T], aAxis int, bAxis int) (*nune.Tensor[T], error) {
+func tryStrassenDot[T Number](a *nune.Tensor[T], b *nune.Tensor[T], aAxis int, bAxis int) (*nune.Tensor[T], error) {
 
 	size := a.Size(aAxis)
 
@@ -149,7 +149,7 @@ func tryStrassenDotAx[T Number](a *nune.Tensor[T], b *nune.Tensor[T], aAxis int,
 	bOtherAxSize := b.Size(bOtherAx)
 
 	if size <= 1 || aOtherAxSize <= 1 || bOtherAxSize <= 1 {
-		return TryTensorDotWithOneAxis([]*nune.Tensor[T]{a, b}, []int{aAxis, bAxis})
+		return TryTensorDot([]*nune.Tensor[T]{a, b}, []int{aAxis, bAxis})
 	}
 
 	as := make([]*nune.Tensor[T], 4)
@@ -197,7 +197,7 @@ func tryStrassenDotAx[T Number](a *nune.Tensor[T], b *nune.Tensor[T], aAxis int,
 	wg.Add(7)
 	for i := 0; i < 7; i++ {
 		go func(t **nune.Tensor[T], s *nune.Tensor[T]) {
-			*t = TensorDotWithOneAxis([]*nune.Tensor[T]{*t, s}, []int{aAxis, bAxis})
+			*t = TensorDot([]*nune.Tensor[T]{*t, s}, []int{aAxis, bAxis})
 			wg.Done()
 		}(&ts[i], ss[i])
 	}
@@ -254,10 +254,10 @@ func tryStrassenDotAx[T Number](a *nune.Tensor[T], b *nune.Tensor[T], aAxis int,
 	return &out, nil
 }
 
-// StrassenDotAx computes matrix multiplation using Strassen algorithm won given axes.
+// StrassenDot computes matrix multiplation using Strassen algorithm won given axes.
 // Only accepts tensors of even sizes on each axis.
-func StrassenDotAx[T Number](a *nune.Tensor[T], b *nune.Tensor[T], aAxis int, bAxis int) *nune.Tensor[T] {
-	out, err := TryStrassenDotAx(a, b, aAxis, bAxis)
+func StrassenDot[T Number](a *nune.Tensor[T], b *nune.Tensor[T], aAxis int, bAxis int) *nune.Tensor[T] {
+	out, err := TryStrassenDot(a, b, aAxis, bAxis)
 	if err != nil {
 		panic(err)
 	}
