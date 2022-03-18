@@ -9,7 +9,7 @@ Nunela provides the linear algebra functionalities for the generic tensor module
 
 The name Nunela comes from Nune + LA (linear algebra).
 
-This implements the multiplation of tensors with concurrent [Strassen algorithm](https://en.wikipedia.org/wiki/Strassen_algorithm).
+This implements the multiplation of tensors with concurrent [Strassen algorithm](https://en.wikipedia.org/wiki/Strassen_algorithm) using goroutines.
 
 
 ## Installation
